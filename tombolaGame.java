@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Collections;
 
 public class tombolaGame {
-    private List<Integer> numbers;
-    private List<String> playerCards;
+    List<Integer> numbers;
+    List<String> playerCards;
 
 
     public tombolaGame(){
@@ -34,8 +34,8 @@ public class tombolaGame {
 
         //formatto la cartella come stringa e la ritorno
         StringBuilder card = new StringBuilder();
-        card.append(formatRow(row1)).append("/n");
-        card.append(formatRow(row2)).append("/n");
+        card.append(formatRow(row1)).append("\n");
+        card.append(formatRow(row2)).append("\n");
         card.append(formatRow(row3));
         return card.toString();
 
@@ -48,13 +48,12 @@ public class tombolaGame {
         return row.subList(0, 5);
     }
 
-    private String formatRow(List<Integer> row){
-        //formatta una riga di 5 numeri come stringa
+    private String formatRow(List<Integer> row) {
         StringBuilder formattedRow = new StringBuilder();
-        for(int i = 0; i < 5; i++){
-            formattedRow.append(String.format("%2d", row.get(i))).append(" ");
+        for (int num : row) {
+            formattedRow.append(num).append(" ");
         }
-        return formattedRow.toString();
+        return formattedRow.toString().trim();
     }
 
     public int extractNumber(){
@@ -77,24 +76,41 @@ public class tombolaGame {
         return extractedNumbers.containsAll(playerNumbers);
     }
 
-    private List<Integer> convertToIntegerList(String[] array){
-
-        //converte un array di stringhe in una lista di interi
+    private List<Integer> convertToIntegerList(String[] array) {
         List<Integer> integerList = new ArrayList<>();
-        for(String s : array){
-            integerList.add(Integer.parseInt(s));
+        for (String s : array) {
+            s = s.replace("\n", ""); // Rimuovi il carattere di escape \n
+            try {
+                integerList.add(Integer.parseInt(s));
+            } catch (NumberFormatException e) {
+                // Handle invalid input strings here
+                // For example, you can skip the invalid string or log an error message
+                System.err.println("Invalid input string: " + s);
+            }
         }
         return integerList;
     }
 
-    private int determinateWinner(List<Integer> extractedNumbers){
-        //determina il vincitore
-        for(int i = 0; i < playerCards.size(); i++){
-            if(isWinner(playerCards.get(i), extractedNumbers)){
-                return i+1;
+
+    public int determinateWinner(List<Integer> extractedNumbers) {
+        try {
+            for (int i = 0; i < playerCards.size(); i++) {
+                boolean allNumbersExtracted = true;
+                List<Integer> cardNumbers = convertToIntegerList(playerCards.get(i).split("\\s+"));
+                for (int number : cardNumbers) {
+                    if (!extractedNumbers.contains(number)) {
+                        allNumbersExtracted = false;
+                        break;
+                    }
+                }
+                if (allNumbersExtracted) {
+                    return i + 1; // Il giocatore ha vinto, restituisci l'indice basato su 1
+                }
             }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
         }
-        return -1;
+        return -1; // Nessun vincitore trovato o errore di conversione
     }
     public static void main(String[] args){
         tombolaGame game = new tombolaGame();
@@ -118,7 +134,7 @@ public class tombolaGame {
 
             System.out.println("E' stato estratto il numero " + extractedNumber);
 
-            //verifica se è presente un vincitore
+            //verifica se c'è un vincitore
             int winner = game.determinateWinner(extractedNumbers);
             if(winner != -1){
                 System.out.println("Il vincitore è il giocatore " + winner);

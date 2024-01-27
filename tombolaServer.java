@@ -1,63 +1,77 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
+
+
 public class tombolaServer {
-    public static void main(String[] args){
-        try{
-            //crea il server
-            ServerSocket serverSocket = new ServerSocket(12345);
+    public static void main(String[] args) {
+        ServerSocket serverSocket = null;
+        List<Integer> extractedNumbers = new ArrayList<>();
+        try {
+            serverSocket = new ServerSocket(12345);
 
             System.out.println("Server avviato e in attesa di connessioni...");
 
-            //accetta connessioni in entrata
+            // accetta connessioni in entrata
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Connessione accettata da " + clientSocket.getInetAddress().getHostAddress());
 
-            Socket clinetSocket= serverSocket.accept();
-            System.out.println("Connessione accettata da " + clinetSocket.getInetAddress().getHostAddress());
-
-            //creazone degli stream di input/output
-            ObjectOutputStream outToClient = new ObjectOutputStream(clinetSocket.getOutputStream());
-            ObjectInputStream inFromClient = new ObjectInputStream(clinetSocket.getInputStream());
+            // creazione degli stream di input/output
+            ObjectOutputStream outToClient = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream inFromClient = new ObjectInputStream(clientSocket.getInputStream());
 
             outToClient.writeObject("Benvenuto a Tombola!");
 
             tombolaGame game = new tombolaGame();
-            /* 
-            while(true){
-                //accetta la connessione di un client
-                Socket socket = server.accept();
-                System.out.println("Connessione accettata");
-                //invia il messaggio di benvenuto al client
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                out.writeObject("Benvenuto a Tombola!");
-                //crea una nuova partita
-                tombolaGame game = new tombolaGame();
-                //invia le cartelle al client
-                List<String> playerCards = game.getPlayerCards();
-                out.writeObject(playerCards);
-                //invia i numeri estratti al client
-                while(true){
-                    //estrai un numero
-                    int extractedNumber = game.extractNumber();
-                    //invia il numero al client
-                    out.writeObject(extractedNumber);
-                    //attendi conferma dal client
-                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                    String response = (String) in.readObject();
-                    //controlla se c'è un vincitore
-                    String message = game.checkWinner();
-                    if(message != null){
-                        //invia il messaggio al client
-                        out.writeObject(message);
-                        //chiudi la connessione
-                        socket.close();
-                        break;
-                    }
+            boolean gameEnded = false;
+
+            while (!gameEnded) {
+                // Invia le cartelle dei giocatori al client
+                outToClient.writeObject(game.playerCards);
+
+                // Estrai un numero e invialo al client
+                int extractedNumber = game.extractNumber();
+                extractedNumbers.add(extractedNumber);
+                outToClient.writeObject(extractedNumber);
+
+                // Attendi la conferma del client
+                String clientResponse = (String) inFromClient.readObject();
+                System.out.println("Risposta del client: " + clientResponse);
+
+                // Puoi aggiungere pause o ritardi tra le estrazioni, se desiderato
+                // Thread.sleep(1000);
+
+                //verifica la presenza di un vincitore
+                int winner = game.determinateWinner(extractedNumbers);
+
+                if (winner != -1) {
+                    outToClient.writeObject("Il giocatore " + winner + " ha vinto!");
+                    gameEnded = true;
+                }
+
+                // Attendi la risposta del client per decidere se continuare o uscire
+                String continueGame = (String) inFromClient.readObject();
+                System.out.println("Risposta del client: " + continueGame);
+
+                if (continueGame.equals("n")) {
+                    // Il client ha scelto di uscire, chiudi la connessione
+                    clientSocket.close();
+                    break;
                 }
             }
-            */
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (serverSocket != null) {
+                try {
+                    serverSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
+
