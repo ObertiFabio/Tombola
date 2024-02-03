@@ -1,7 +1,10 @@
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.List;
 import java.util.Collections;
+import java.util.HashSet;
 
 public class tombolaGame {
     List<Integer> numbers;
@@ -26,26 +29,41 @@ public class tombolaGame {
     }
 
     private String generatePlayerCard(){
-        // genera una cartella per il giocatore con 3 righe da 5 numeri ciascuna
-        List<Integer> row1 = generateRow();
-        List<Integer> row2 = generateRow();
-        List<Integer> row3 = generateRow();
-       
+        // Genera una cartella per il giocatore con 3 righe da 5 numeri ciascuna
+    List<List<Integer>> rows = new ArrayList<>();
 
-        //formatto la cartella come stringa e la ritorno
-        StringBuilder card = new StringBuilder();
-        card.append(formatRow(row1)).append("\n");
-        card.append(formatRow(row2)).append("\n");
-        card.append(formatRow(row3));
-        return card.toString();
+    // Genera le righe con numeri unici
+    for (int i = 0; i < 3; i++) {
+        rows.add(generateUniqueRow());
+    }
+
+    // Formatta la cartella come stringa e la ritorna
+    StringBuilder card = new StringBuilder();
+    for (List<Integer> row : rows) {
+        card.append(formatRow(row)).append("\n");
+    }
+    return card.toString();
 
     }
 
-    private List<Integer> generateRow(){
-        //genera una riga con 5 numeri casuali
-        List<Integer> row = new ArrayList<>(numbers);
-        Collections.shuffle(row);
-        return row.subList(0, 5);
+    private List<Integer> generateUniqueRow() {
+        List<Integer> row = new ArrayList<>();
+        Set<Integer> usedNumbers = new HashSet<>();
+
+        // Genera numeri casuali unici per la riga
+        while (row.size() < 5) {
+            int randomNumber = getRandomNumber();
+            if (!usedNumbers.contains(randomNumber)) {
+                row.add(randomNumber);
+                usedNumbers.add(randomNumber);
+            }
+        }
+        return row;
+    }
+
+    private int getRandomNumber() {
+        // Genera un numero casuale compreso tra 1 e 90
+        return ThreadLocalRandom.current().nextInt(1, 91);
     }
 
     private String formatRow(List<Integer> row) {
@@ -112,35 +130,19 @@ public class tombolaGame {
         }
         return -1; // Nessun vincitore trovato o errore di conversione
     }
-    public static void main(String[] args){
-        tombolaGame game = new tombolaGame();
-        System.out.println("Benvenuto nel gioco della tombola!");
-        System.out.println("Ecco le tue cartelle:");
 
-        for(int i =0; i< game.playerCards.size(); i++){
-            System.out.println("Giocatore " + (i+1) + ":");
-            System.out.println(game.playerCards.get(i));
-        }
-
-        System.out.println("Iniziamo a giocare!");
-        List<Integer> extractedNumbers = new ArrayList<>();
-        while(true){
-            int extractedNumber = game.extractNumber();
-            if(extractedNumber == -1){
-                System.out.println("Tutti i numeri sono stati estratti!");
-                break;
-            }
-            extractedNumbers.add(extractedNumber);
-
-            System.out.println("E' stato estratto il numero " + extractedNumber);
-
-            //verifica se c'è un vincitore
-            int winner = game.determinateWinner(extractedNumbers);
-            if(winner != -1){
-                System.out.println("Il vincitore è il giocatore " + winner);
-                break;
+    
+    public int checkCinquina(List<Integer> extractedNumbers) {
+        for (int i = 0; i < playerCards.size(); i++) {
+            String[] rows = playerCards.get(i).split("\n");
+            for (String row : rows) {
+                List<Integer> cardNumbers = convertToIntegerList(row.split("\\s+"));
+                if (extractedNumbers.containsAll(cardNumbers)) {
+                    return i + 1; // Il giocatore ha una cinquina, restituisci l'indice basato su 1
+                }
             }
         }
+        return -1; // Nessuna cinquina trovata
     }
 
 }

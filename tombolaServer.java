@@ -40,9 +40,6 @@ public class tombolaServer {
                 String clientResponse = (String) inFromClient.readObject();
                 System.out.println("Risposta del client: " + clientResponse);
 
-                // Puoi aggiungere pause o ritardi tra le estrazioni, se desiderato
-                // Thread.sleep(1000);
-
                 //verifica la presenza di un vincitore
                 int winner = game.determinateWinner(extractedNumbers);
 
