@@ -25,21 +25,16 @@ public class tombolaClient {
                     System.out.println("Giocatore " + (i+1) + ":");
                     System.out.println(playerCards.get(i));
                 }
-                //attendi l'estrazione di un numero
+                
                 System.out.println("In attesa dell'estrazione di un numero...");
 
-                //ricevi il numero etsrattto dal server
                 int extractedNumber = (int) in.readObject();
                 System.out.println("E' stato estratto il numero " + extractedNumber);
 
-                //invia conferma al server
                 System.out.println("Premi invio per confermare");
-
-                //attendi il messaggio del server (vincitore o completare il gioco)
                 String message = (String) in.readObject();
                 System.out.println(message);
 
-                //chiedi all'utnete se vuole continuare o uscire
                 System.out.println("Vuoi continuare a giocare? (s/n)");
                 String response= scanner.nextLine().toLowerCase();
                 if(response.equals("n")){

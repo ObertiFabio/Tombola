@@ -33,7 +33,7 @@ public class Main{
                 e.printStackTrace();
             }
             
-            //verifica se c'è una cinquina
+            //verifica della cinquina
             if (!cinquinaFound && !tombolaFound) {
                 int cinquina = game.checkCinquina(extractedNumbers);
                 if (cinquina != -1) {

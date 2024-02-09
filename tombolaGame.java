@@ -3,7 +3,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.List;
-import java.util.Collections;
 import java.util.HashSet;
 
 public class tombolaGame {
@@ -28,22 +27,21 @@ public class tombolaGame {
         }
     }
 
-    private String generatePlayerCard(){
+    private String generatePlayerCard() {
         // Genera una cartella per il giocatore con 3 righe da 5 numeri ciascuna
-    List<List<Integer>> rows = new ArrayList<>();
+        List<List<Integer>> rows = new ArrayList<>();
 
-    // Genera le righe con numeri unici
-    for (int i = 0; i < 3; i++) {
-        rows.add(generateUniqueRow());
-    }
+        // Genera le righe con numeri unici
+        for (int i = 0; i < 3; i++) {
+            rows.add(generateUniqueRow());
+        }
 
-    // Formatta la cartella come stringa e la ritorna
-    StringBuilder card = new StringBuilder();
-    for (List<Integer> row : rows) {
-        card.append(formatRow(row)).append("\n");
-    }
-    return card.toString();
-
+        // Formatta la cartella come stringa e la ritorna
+        StringBuilder card = new StringBuilder();
+        for (List<Integer> row : rows) {
+            card.append(formatRow(row)).append("\n");
+        }
+        return card.toString();
     }
 
     private List<Integer> generateUniqueRow() {
@@ -74,18 +72,16 @@ public class tombolaGame {
         return formattedRow.toString().trim();
     }
 
-    public int extractNumber(){
-        //estrae un numero casuale dalla lista di numeri
-        if(!numbers.isEmpty()){
+    public int extractNumber() {
+        // Estrae un numero casuale dalla lista di numeri
+        if (!numbers.isEmpty()) {
             Random random = new Random();
             int index = random.nextInt(numbers.size());
             int extractedNumber = numbers.remove(index);
             return extractedNumber;
-        }
-        else{
+        } else {
             return -1;
         }
-        
     }
 
     public boolean isWinner(String playerCard , List<Integer> extractedNumbers){
