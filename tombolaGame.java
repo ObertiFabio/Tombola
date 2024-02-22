@@ -1,17 +1,25 @@
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.List;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 public class tombolaGame {
-    List<Integer> numbers;
-    List<String> playerCards;
-
+    private List<Integer> numbers;
+    private HashMap<String, LinkedList<StringBuilder>> playerCards;
+    private HashMap<String, clientController> players;
+    private int readyPlayers = 0;
 
     public tombolaGame(){
         initalizeGame();
+        playerCards = new HashMap<>();
+        players = new HashMap<>();
+
     }
 
     public void initalizeGame(){
@@ -20,28 +28,71 @@ public class tombolaGame {
         for(int i = 1; i <= 90; i++){
             numbers.add(i);
         }
+    }
 
-        playerCards = new ArrayList<>();
-        for(int i = 0; i < 3; i++){
-            playerCards.add(generatePlayerCard());
+    public void play(){
+        try{
+            Thread.sleep(1000);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        initalizeGame();
+        List<Integer> extractedNumbers = new ArrayList<>();
+        boolean tombolaFound = false;
+        boolean cinquinaFound = false;
+        while(true){
+            int extractedNumber = extractNumber();
+            if(extractedNumber == -1){
+                broadcast("Tutti i numeri sono stati estratti!");
+                break;
+            }
+            extractedNumbers.add(extractedNumber);
+            broadcast("E' stato estratto il numero " + extractedNumber);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //verifica della cinquina
+            if (!cinquinaFound && !tombolaFound) {
+                String cinquina = checkCinquina(extractedNumbers);
+                if (cinquina != null) {
+                    broadcast("Il giocatore " + cinquina + " ha fatto una cinquina!");
+                    cinquinaFound = true; 
+                }
+            }
+            if (!tombolaFound) {
+                String winner = determinateWinner(extractedNumbers);
+                if (winner != null) {
+                    broadcast("Il giocatore " + winner + " ha fatto tombola!");
+                    tombolaFound = true; 
+                    break;
+                }
+            }
         }
     }
 
-    private String generatePlayerCard() {
+    public LinkedList<StringBuilder> generatePlayerCard(int n, String nome){
         // Genera una cartella per il giocatore con 3 righe da 5 numeri ciascuna
-        List<List<Integer>> rows = new ArrayList<>();
-
-        // Genera le righe con numeri unici
-        for (int i = 0; i < 3; i++) {
-            rows.add(generateUniqueRow());
+        for(int j = 0; j < n; j++){
+            
+            List<List<Integer>> rows = new ArrayList<>();
+    
+            // Genera le righe con numeri unici
+            for (int i = 0; i < 3; i++) {
+                rows.add(generateUniqueRow());
+            }
+    
+            // Formatta la cartella come stringa e la ritorna
+            StringBuilder card = new StringBuilder();
+            for (List<Integer> row : rows) {
+                card.append(formatRow(row)).append("\n");
+            }
+            playerCards.get(nome).add(card);
         }
-
-        // Formatta la cartella come stringa e la ritorna
-        StringBuilder card = new StringBuilder();
-        for (List<Integer> row : rows) {
-            card.append(formatRow(row)).append("\n");
-        }
-        return card.toString();
+        readyPlayers++;
+        return playerCards.get(nome);
     }
 
     private List<Integer> generateUniqueRow() {
@@ -106,39 +157,45 @@ public class tombolaGame {
     }
 
 
-    public int determinateWinner(List<Integer> extractedNumbers) {
-        try {
-            for (int i = 0; i < playerCards.size(); i++) {
-                boolean allNumbersExtracted = true;
-                List<Integer> cardNumbers = convertToIntegerList(playerCards.get(i).split("\\s+"));
-                for (int number : cardNumbers) {
-                    if (!extractedNumbers.contains(number)) {
-                        allNumbersExtracted = false;
-                        break;
-                    }
-                }
-                if (allNumbersExtracted) {
-                    return i + 1; // Il giocatore ha vinto, restituisci l'indice basato su 1
+    public String determinateWinner(List<Integer> extractedNumbers) {
+        for (String player : playerCards.keySet()) {
+            for (StringBuilder card : playerCards.get(player)) {
+                if (isWinner(card.toString(), extractedNumbers)) {
+                    return player; // Il giocatore ha fatto tombola
                 }
             }
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
         }
-        return -1; // Nessun vincitore trovato o errore di conversione
+        return null; // Nessun vincitore trovato
     }
 
     
-    public int checkCinquina(List<Integer> extractedNumbers) {
-        for (int i = 0; i < playerCards.size(); i++) {
-            String[] rows = playerCards.get(i).split("\n");
-            for (String row : rows) {
-                List<Integer> cardNumbers = convertToIntegerList(row.split("\\s+"));
-                if (extractedNumbers.containsAll(cardNumbers)) {
-                    return i + 1; // Il giocatore ha una cinquina, restituisci l'indice basato su 1
+    public String checkCinquina(List<Integer> extractedNumbers) {
+        for (String player : playerCards.keySet()) {
+            for (StringBuilder card : playerCards.get(player)) {
+                String[] rows = (card.toString()).split("\n");
+                for (String row : rows) {
+                    List<Integer> rowNumbers = convertToIntegerList(row.split("\\s+"));
+                    if (extractedNumbers.containsAll(rowNumbers)) {
+                        return player; // Il giocatore ha fatto cinquina
+                    }
                 }
             }
         }
-        return -1; // Nessuna cinquina trovata
+        return null; // Nessun vincitore trovato
     }
 
+    public void addPlayer(clientController clientThread, String nome){
+        playerCards.put(nome, new LinkedList<StringBuilder>());
+        players.put(nome, clientThread);
+    }
+
+    public void broadcast(String message){
+        for (clientController player : players.values()) {
+            player.send(message);
+        }
+    }
+
+    public int getReadyPlayers(){
+        return readyPlayers;
+    }
 }

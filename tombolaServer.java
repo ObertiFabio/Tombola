@@ -7,31 +7,25 @@ import java.util.List;
 public class tombolaServer {
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
-        List<Integer> extractedNumbers = new ArrayList<>();
+        //List<Integer> extractedNumbers = new ArrayList<>();
+        tombolaGame game = new tombolaGame();
         
         try {
             serverSocket = new ServerSocket(12345);
             System.out.println("Server avviato e in attesa di connessioni...");
 
-            while (true) {
+            for (int i=0; i<3; i++) {
                 // Accetto la connessione e creo un socket
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Connessione accettata da " + clientSocket.getInetAddress().getHostAddress());
 
                 // Creo nuovo thread
-                Thread clientThread = new Thread(new clientController(clientSocket, extractedNumbers));
+                clientController clientThread = new clientController(clientSocket, game);
                 clientThread.start();
             }
+            System.out.println("Partita al completo");
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (serverSocket != null) {
-                try {
-                    serverSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 }

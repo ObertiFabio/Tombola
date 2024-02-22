@@ -3,49 +3,64 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.util.List;
 public class tombolaClient {
-    public static void main(String[] args){
+
+    private Socket socket;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private BufferedReader stdIn;
+    private String n;
+
+    public tombolaClient(){
         try{
-            //connetti al server
-
-            Socket socket = new Socket("localhost", 12345);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            Scanner scanner = new Scanner(System.in);
-
-            String welcomeMessage = (String) in.readObject();
-            System.out.println(welcomeMessage);
-
-
-           while(true){
-                //ricevi le cartelle dei giocatori dal server
-                List<String> playerCards = (List<String>) in.readObject();
-                
-                System.out.println("Ecco le tue cartelle:");
-                for(int i =0; i< playerCards.size(); i++){
-                    System.out.println("Giocatore " + (i+1) + ":");
-                    System.out.println(playerCards.get(i));
-                }
-                
-                System.out.println("In attesa dell'estrazione di un numero...");
-
-                int extractedNumber = (int) in.readObject();
-                System.out.println("E' stato estratto il numero " + extractedNumber);
-
-                System.out.println("Premi invio per confermare");
-                String message = (String) in.readObject();
-                System.out.println(message);
-
-                System.out.println("Vuoi continuare a giocare? (s/n)");
-                String response= scanner.nextLine().toLowerCase();
-                if(response.equals("n")){
-                    socket.close();
-                    break;
-                }
-            
-            }
-
-        }catch(Exception e){
+            socket = new Socket("localhost", 12345);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+            stdIn = new BufferedReader(new InputStreamReader(System.in));
+        }
+        catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+    public void start() throws Exception{
+
+        System.out.print("Inserisci il tuo nome:");
+        String name = stdIn.readLine();
+        out.writeObject(name);
+        
+        System.out.println("Benvenuto a Tombola!");
+        
+        do{
+            System.out.print("Quante cartelle vuoi?");
+            n = stdIn.readLine();
+        }while((!n.matches("[0-9]+") || n.equals("")));
+        out.writeObject(n);
+
+        List<StringBuilder> cards = (List<StringBuilder>) in.readObject();
+        System.out.println("Ecco le tua cartelle:");
+        for(StringBuilder card : cards){
+            System.out.println(card);
+        }
+
+        System.out.println("In attesa degli altri giocatori...");
+
+        while(true){
+            String message = (String) in.readObject();
+            if(message != null){
+                System.out.println(message);
+            }
+            else{
+                break;
+            }
+        }
+
+    }
+    public static void main(String[] args){
+        tombolaClient client = new tombolaClient();
+        try{
+            client.start();
+        }catch(Exception e){
+            
         }
     }
 }

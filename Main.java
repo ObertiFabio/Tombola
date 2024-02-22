@@ -5,6 +5,11 @@ public class Main{
 
     public static void main(String[] args){
         tombolaGame game = new tombolaGame();
+
+    }
+    
+    /*public static void main(String[] args){
+        tombolaGame game = new tombolaGame();
         System.out.println("Benvenuto nel gioco della tombola!");
         System.out.println("Ecco le tue cartelle:");
 
@@ -52,5 +57,5 @@ public class Main{
             }
         
         }
-    }
+    }*/
 }
